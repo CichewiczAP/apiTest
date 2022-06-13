@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>OpenWeatherApi Odin Project</title>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <img src="logo.png" alt="open weather api logo">
+        </div>
+        <div>
+            <form action="#" class="search">
+                <input type="text" class="searchbar" placeholder="Enter a city...">
+                <button class="button">Search</button>
+            </form>
+        </div>
+
+    </header>
+    <section class="weatherDisplay">
+        <div class="weatherCard">
+            <div class="temp">
+                <!-- display the temp -->
+                <h2>
+                    <!-- temperature value -->
+                    <span class="tempval"></span><span>&#176;</span> 
+                </h2>
+            </div>
+            <div class="weatherDesc">
+                <!-- input the description of the weather -->
+                <p>
+                    <!-- e.g cloudy -->
+                    <span class="weatherDesc"></span>
+                </p>
+            </div>
+            <!-- display the weather -->
+        </div>
+        <div class="weatherGif">
+            <!-- fetch a gif with description == current weather and display it here -->
+            
+        </div>
+    </section>
+    <script>
+        const tempVal = document.querySelector(".tempval")
+        const weatherDesc = document.querySelector(".weatherDesc")
+        const img = document.querySelector(".weatherGif")
+        let loc = document.querySelector(".searchbar")
+        document.querySelector(".button").addEventListener("click", e => {
+            main(e, loc.value)
+        })
+        async function fetchCoords(location){
+            let response = await fetch(`http://api.positionstack.com/v1/forward?access_key=2f43362fb5e9fdd26c605efd8694c653&query=${location}`)
+            let data = await response.json();
+            console.log(data)
+            return data["data"][0]
+        }
+        
+
+        async function fetchWeather(lat, lon) {
+            let response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=ceef6deab67a4e68bd1580cac0b15e90`)
+            let data = await response.json()
+            console.log(data)
+            return data
+        }
+        function fetchImage(weather) {    
+            fetch(`https://api.giphy.com/v1/gifs/translate?api_key=wjOkUAV2r4CT5JpI2d1FQfOwb3jzROAG&s=${weather}`, {mode: 'cors'})
+            .then(function(response){
+                return response.json();
+            }).then(function(response){
+                img.style.backgroundImage = `url(${response.data.images.original.url})`;
+            }).catch(function(err){
+                img.src= "error.jpg"
+                })
+        }
+        async function main(event) {
+            event.preventDefault();
+            let coords = await fetchCoords(loc.value);
+            let data = await fetchWeather(coords["latitude"], coords["longitude"])
+            tempVal.textContent = `${(Math.round(data["main"]["temp"]-273.15)*(9/5))+32}`
+            weatherDesc.textContent = `${data["weather"][0]["description"]}`
+            await fetchImage(data["weather"][0]["description"])
+        }
+        window.onload = main
+
+    </script>
+</body>
+</html>
